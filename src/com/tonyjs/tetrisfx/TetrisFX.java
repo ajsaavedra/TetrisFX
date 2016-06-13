@@ -1,9 +1,6 @@
 package com.tonyjs.tetrisfx;
 
 import javafx.animation.AnimationTimer;
-import javafx.animation.PauseTransition;
-import javafx.animation.SequentialTransition;
-import javafx.animation.TranslateTransition;
 import javafx.application.Application;
 import javafx.scene.Group;
 import javafx.scene.Parent;
@@ -13,7 +10,6 @@ import javafx.scene.effect.Lighting;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -26,23 +22,19 @@ public class TetrisFX extends Application {
     public static final int WIDTH = 10;
     public static final int HEIGHT = 20;
     public static boolean GAME_OVER = false;
-    public boolean IS_MOVING = false;
     private double time;
 
     private AnimationTimer timer;
 
-    private int tetroX = 0;
-    private int tetroY = 0;
-    private int oldTetroX = 0;
-    private int oldTetroY = 0;
+    private int tetrominoY = 0;
+    private int oldTetrominoY = 0;
 
     public Tetromino originalSet;
     public ArrayList<Tetromino.TetrominoDefinition> playedSet;
-
-    public Tile[][] board = new Tile[HEIGHT][WIDTH];
-
     private Tetromino.TetrominoDefinition selected;
     private int[][] selectedMatrix;
+
+    public Tile[][] board = new Tile[HEIGHT][WIDTH];
 
     private Group tileGroup = new Group();
 
@@ -91,18 +83,18 @@ public class TetrisFX extends Application {
     }
 
     private void moveDown() {
-        if (tetroY >= HEIGHT - selectedMatrix.length) {
+        if (tetrominoY >= HEIGHT - selectedMatrix.length) {
             timer.stop();
             respawn();
         }
         for (int i = 0; i < selectedMatrix.length; i++) {
             for (int j = 0; j < selectedMatrix[0].length; j++) {
                 if (selectedMatrix[i][j] != 0) {
-                    board[oldTetroY + i][j].setFill(Color.BLACK);
-                    board[oldTetroY + i][j].setEffect(null);
+                    board[oldTetrominoY + i][j].setFill(Color.BLACK);
+                    board[oldTetrominoY + i][j].setEffect(null);
                 }
             }
-            tetroY += i;
+            tetrominoY += i;
         }
     }
 
@@ -110,17 +102,17 @@ public class TetrisFX extends Application {
         for (int i = 0; i < selectedMatrix.length; i++) {
             for (int j = 0; j < selectedMatrix[0].length; j++) {
                 if (selectedMatrix[i][j] != 0) {
-                    board[tetroY + i][j].setFill(selected.getColor());
-                    board[tetroY + i][j].setEffect(lighting);
+                    board[tetrominoY + i][j].setFill(selected.getColor());
+                    board[tetrominoY + i][j].setEffect(lighting);
                 }
             }
-            oldTetroY += i;
+            oldTetrominoY += i;
         }
     }
 
     private void respawn() {
-        tetroX = 0; tetroY = 0;
-        oldTetroX = 0; oldTetroY = 0;
+        tetrominoY = 0;
+        oldTetrominoY = 0;
         time = 0;
         timer = null;
         spawnTetrominos();
@@ -143,5 +135,4 @@ public class TetrisFX extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-
 }
