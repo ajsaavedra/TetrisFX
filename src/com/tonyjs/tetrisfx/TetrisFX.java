@@ -8,6 +8,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.effect.Light;
 import javafx.scene.effect.Lighting;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -23,6 +24,9 @@ public class TetrisFX extends Application {
     public static final int WIDTH = 10;
     public static final int HEIGHT = 20;
     public static boolean GAME_OVER = false;
+    public static boolean ROTATING = false;
+    public static boolean DROPPING = false;
+    public static boolean SHIFTING = false;
     private double time;
 
     private AnimationTimer timer;
@@ -58,6 +62,74 @@ public class TetrisFX extends Application {
         playedSet = new ArrayList<>();
 
         spawnTetrominos();
+
+        primaryStage.getScene().setOnKeyPressed(e -> {
+            if (e.getCode() == KeyCode.SPACE) {
+                ROTATING = true;
+                clearMatrix();
+                selectedMatrix = selected.rotate();
+            } else if (e.getCode() == KeyCode.LEFT) {
+                SHIFTING = true;
+                moveLeft();
+            } else if (e.getCode() == KeyCode.RIGHT) {
+                SHIFTING = true;
+                moveRight();
+            } else if (e.getCode() == KeyCode.DOWN) {
+                dropBrick();
+            }
+            render();
+            ROTATING = false;
+            SHIFTING = false;
+        });
+
+    }
+
+    private void clearMatrix() {
+        for (int i = 0; i < selectedMatrix.length ; i++) {
+            for (int j = 0; j < selectedMatrix[0].length; j++) {
+                if (selectedMatrix[i][j] != 0) {
+                    board[tetrominoY + i][tetrominoX + j].setFill(Color.BLACK);
+                    board[tetrominoY + i][tetrominoX + j].setEffect(null);
+                    board[tetrominoY + i][tetrominoX + j].setAvailable(true);
+                }
+            }
+        }
+    }
+
+    private void moveLeft() {
+        if (tetrominoX > 0) {
+            clearMatrix();
+            --tetrominoX;
+            shiftBrick();
+        }
+    }
+
+    private void moveRight() {
+        if (tetrominoX < WIDTH - selectedMatrix[0].length) {
+            clearMatrix();
+            ++tetrominoX;
+            shiftBrick();
+        }
+    }
+
+    public void shiftBrick() {
+        for (int i = 0; i < selectedMatrix.length ; i++) {
+            for (int j = 0; j < selectedMatrix[0].length; j++) {
+                if (selectedMatrix[i][j] != 0) {
+                    board[tetrominoY + i][tetrominoX + j].setFill(selected.getColor());
+                    board[tetrominoY + i][tetrominoX + j].setEffect(lighting);
+                    board[tetrominoY + i][tetrominoX + j].setAvailable(false);
+                }
+            }
+        }
+    }
+
+    private void dropBrick() {
+        DROPPING = true;
+        while(DROPPING) {
+            moveDown();
+            render();
+        }
     }
 
     private void spawnTetrominos() {
@@ -83,8 +155,10 @@ public class TetrisFX extends Application {
             public void handle(long now) {
                 time += 0.010;
                 if (time >= 0.5) {
-                    moveDown();
-                    render();
+                    if (!ROTATING && !SHIFTING) {
+                        moveDown();
+                        render();
+                    }
                     time = 0;
                 }
             }
@@ -99,6 +173,7 @@ public class TetrisFX extends Application {
             Platform.exit();
         } else if ((tetrominoY >= (HEIGHT - selectedMatrix.length)) || !moveIsLegal()) {
             timer.stop();
+            DROPPING = false;
             respawn();
         } else if (moveIsLegal()) {
             for (int i = 0; i < selectedMatrix.length ; i++) {
@@ -136,7 +211,7 @@ public class TetrisFX extends Application {
         boolean legalMove = true;
         for (int i = 1; i < selectedMatrix.length; i++) {
             for (int j = 0; j < selectedMatrix[selectedMatrix.length - 1].length; j++) {
-                if(!board[oldTetrominoY][j].isAvailable() && selectedMatrix[i][j] != 0) {
+                if(!board[oldTetrominoY-1][j].isAvailable() && selectedMatrix[i][j] != 0) {
                     legalMove = false;
                 }
             }
