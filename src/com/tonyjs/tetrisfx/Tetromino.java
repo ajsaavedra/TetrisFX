@@ -11,8 +11,8 @@ public class Tetromino {
     private static ArrayList<TetrominoDefinition> pieceSet;
 
     private static final TetrominoDefinition I = new TetrominoDefinition(new int[][]{
-            {1, 1, 1, 1},
-            {0, 0, 0, 0}
+            {0, 0, 0, 0},
+            {1, 1, 1, 1}
     }, Color.CYAN);
 
     private static final TetrominoDefinition J = new TetrominoDefinition(new int[][]{
@@ -23,7 +23,7 @@ public class Tetromino {
     private static final TetrominoDefinition L = new TetrominoDefinition(new int[][]{
             {0, 0, 1},
             {1, 1, 1}
-    }, Color.ORANGE);
+    }, Color.rgb(255, 94, 0));
 
     private static final TetrominoDefinition O = new TetrominoDefinition(new int[][]{
             {1, 1},
@@ -43,7 +43,7 @@ public class Tetromino {
     private static final TetrominoDefinition Z = new TetrominoDefinition(new int[][]{
             {1, 1, 0},
             {0, 1, 1}
-    }, Color.ORANGERED);
+    }, Color.RED);
 
     public Tetromino() {
         pieceSet = new ArrayList<>();
