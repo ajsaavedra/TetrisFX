@@ -32,9 +32,7 @@ public class TetrisFX extends Application {
     private AnimationTimer timer;
 
     private int tetrominoY = 0;
-    private int oldTetrominoY = 0;
     private int tetrominoX = 0;
-    private int oldTetrominoX = 0;
 
     public Tetromino originalSet;
     public ArrayList<Tetromino.TetrominoDefinition> tetrominoSet;
@@ -146,16 +144,14 @@ public class TetrisFX extends Application {
                     board[i][j].setFill(selected.getColor());
                     board[i][j].setEffect(lighting);
                     board[i][j].setAvailable(false);
-                    oldTetrominoX = j;
                 }
             }
-            oldTetrominoY = i;
         }
 
         timer = new AnimationTimer() {
             @Override
             public void handle(long now) {
-                time += 0.050;
+                time += 0.030;
                 if (time >= 0.5) {
                     if (!ROTATING && !SHIFTING || !DROPPING) {
                         moveDown();
@@ -175,11 +171,11 @@ public class TetrisFX extends Application {
             GAME_OVER = true;
             timer.stop();
             Platform.exit();
-        } else if (tetrominoY >= (HEIGHT - selectedMatrix.length)) {
+        } else if (tetrominoY >= (HEIGHT - selectedMatrix.length) || !moveIsLegal) {
             timer.stop();
             DROPPING = false;
             respawn();
-        } else if (moveIsLegal) {
+        } else {
             for (int i = 0; i < selectedMatrix.length ; i++) {
                 for (int j = 0; j < selectedMatrix[0].length; j++) {
                     if (selectedMatrix[i][j] != 0) {
@@ -200,10 +196,9 @@ public class TetrisFX extends Application {
                     board[tetrominoY + i][tetrominoX + j].setFill(selected.getColor());
                     board[tetrominoY + i][tetrominoX + j].setEffect(lighting);
                     board[tetrominoY + i][tetrominoX + j].setAvailable(false);
-                    oldTetrominoX = j;
                 }
             }
-            oldTetrominoY += i;
+//            oldTetrominoY += i;
         }
     }
 
@@ -216,7 +211,8 @@ public class TetrisFX extends Application {
         for (int i = matrixSize - 1; i < matrixSize; i++) {
             for (int j = 0; j < selectedMatrix[0].length; j++) {
                 if (selectedMatrix[i][j] != 0) {
-                    if (!board[tetrominoY + matrixSize][j].isAvailable()) {
+                    if ((tetrominoY >= (HEIGHT - matrixSize)) ||
+                            !board[tetrominoY + matrixSize][tetrominoX + j].isAvailable()) {
                         legalMove = false;
                     }
                 }
@@ -227,9 +223,7 @@ public class TetrisFX extends Application {
 
     private void respawn() {
         tetrominoY = 0;
-        oldTetrominoY = 0;
         tetrominoX = 0;
-        oldTetrominoX = 0;
         time = 0;
         timer = null;
         spawnTetrominos();
