@@ -68,7 +68,7 @@ public class TetrisFX extends Application {
         spawnTetrominos();
 
         primaryStage.getScene().setOnKeyPressed(e -> {
-            if (e.getCode() == KeyCode.SPACE) {
+            if (e.getCode() == KeyCode.UP) {
                 ROTATING = true;
                 clearMatrix();
                 selectedMatrix = selected.rotate();
@@ -80,6 +80,9 @@ public class TetrisFX extends Application {
                 SHIFTING = true;
                 moveRight();
             } else if (e.getCode() == KeyCode.DOWN) {
+                moveDown();
+                render();
+            } else if (e.getCode() == KeyCode.SPACE) {
                 dropBrick();
             }
 
