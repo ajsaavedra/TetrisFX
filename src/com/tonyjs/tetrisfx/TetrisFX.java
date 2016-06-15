@@ -172,7 +172,7 @@ public class TetrisFX extends Application {
     private void moveDown() {
         boolean moveIsLegal = moveIsLegal();
 
-        if ((tetrominoY <= 0 && !moveIsLegal)) {
+        if ((tetrominoY <= 1 && !moveIsLegal)) {
             GAME_OVER = true;
             timer.stop();
             Platform.exit();
@@ -213,10 +213,14 @@ public class TetrisFX extends Application {
         }
         boolean legalMove = true;
         int matrixSize = selectedMatrix.length;
-        for (int i = matrixSize - 1; i < matrixSize; i++) {
+        for (int i = 0; i < matrixSize; i++) {
             for (int j = 0; j < selectedMatrix[0].length; j++) {
                 if (selectedMatrix[i][j] != 0) {
-                    if ((tetrominoY >= (HEIGHT - matrixSize)) ||
+                    if (i == 0 && selectedMatrix[i+1][j] == 0) {
+                        if (!board[tetrominoY + matrixSize-1][tetrominoX + j].isAvailable()) {
+                            legalMove = false;
+                        }
+                    } else if ((tetrominoY >= (HEIGHT - matrixSize)) ||
                             !board[tetrominoY + matrixSize][tetrominoX + j].isAvailable()) {
                         legalMove = false;
                     }
@@ -257,7 +261,7 @@ public class TetrisFX extends Application {
         }
     }
 
-    private Animation deleteRow(int rowIndex, int shiftDifferenceX) {
+    private Animation deleteRow(int rowIndex, int shiftDifferenceY) {
         ParallelTransition parallelTransition = new ParallelTransition();
         for (int i = rowIndex; i >= rowIndex; i--) {
             for (int j = 0; j < WIDTH; j++) {
@@ -279,9 +283,9 @@ public class TetrisFX extends Application {
                                         board[k][colIndex].setFill(Color.BLACK);
                                         board[k][colIndex].setEffect(null);
                                         board[k][colIndex].setAvailable(true);
-                                        board[k + shiftDifferenceX][colIndex].setFill(color);
-                                        board[k + shiftDifferenceX][colIndex].setEffect(lighting);
-                                        board[k + shiftDifferenceX][colIndex].setAvailable(false);
+                                        board[k + shiftDifferenceY][colIndex].setFill(color);
+                                        board[k + shiftDifferenceY][colIndex].setEffect(lighting);
+                                        board[k + shiftDifferenceY][colIndex].setAvailable(false);
                                     }
                                 }
                         });
