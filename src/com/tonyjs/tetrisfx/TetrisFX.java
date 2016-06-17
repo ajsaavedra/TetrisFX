@@ -295,6 +295,7 @@ public class TetrisFX extends Application {
     private void checkRows() {
         boolean fullRow = true;
         ParallelTransition deleteRowTransition = new ParallelTransition();
+        int topRow = 0;
 
         for (int i = HEIGHT - 1; i >= tetrominoY; i--) {
             fullRow = true;
@@ -304,18 +305,24 @@ public class TetrisFX extends Application {
                 }
             }
             if (fullRow) {
+                topRow = i;
                 shiftDifference++;
-                deleteRowTransition.getChildren().add(deleteRow(i, shiftDifference));
+                deleteRowTransition.getChildren().add(deleteRow(i));
             }
         }
 
         if (deleteRowTransition.getChildren().size() > 0) {
             deleteRowTransition.play();
-            shiftDifference = 0;
+            final int row = topRow;
+            deleteRowTransition.setOnFinished(e -> {
+                deleteRowTransition.getChildren().clear();
+                shiftRowsAfterDeletion(row, shiftDifference);
+                shiftDifference = 0;
+            });
         }
     }
 
-    private Animation deleteRow(int rowIndex, int shiftDifferenceY) {
+    private Animation deleteRow(int rowIndex) {
         ParallelTransition parallelTransition = new ParallelTransition();
         for (int i = rowIndex; i >= rowIndex; i--) {
             for (int j = 0; j < WIDTH-1; j++) {
@@ -331,25 +338,25 @@ public class TetrisFX extends Application {
                             board[rowIndex][colIndex].setEffect(null);
                             board[rowIndex][colIndex].setAvailable(true);
                             parallelTransition.getChildren().clear();
-                            for (int k = rowIndex-1; k > tetrominoY + selectedMatrix.length - 1; k--) {
-                                if (!board[k][colIndex].isAvailable()) {
-                                    Paint color = board[k][colIndex].getFill();
-                                    board[k][colIndex].setFill(Color.BLACK);
-                                    board[k][colIndex].setEffect(null);
-                                    board[k][colIndex].setAvailable(true);
-                                    board[k + shiftDifferenceY][colIndex].setFill(color);
-                                    board[k + shiftDifferenceY][colIndex].setEffect(lighting);
-                                    board[k + shiftDifferenceY][colIndex].setAvailable(false);
-                                }
-                            }
                         });
                         parallelTransition.getChildren().add(fadeTransition);
                     }
-
                 }
             }
         }
         return parallelTransition;
+    }
+
+    private void shiftRowsAfterDeletion(int rowIndex, int shiftDifferenceY) {
+        for (int k = rowIndex - 1; k > 3; k--) {
+            for (int colIndex = 0; colIndex < WIDTH - 1; colIndex++) {
+                    Paint color = board[k][colIndex].getFill();
+                    boolean indexIsAvailable = board[k][colIndex].isAvailable();
+                    board[k + shiftDifferenceY][colIndex].setFill(indexIsAvailable ? Color.BLACK : color);
+                    board[k + shiftDifferenceY][colIndex].setEffect(indexIsAvailable ? null : lighting);
+                    board[k + shiftDifferenceY][colIndex].setAvailable(indexIsAvailable);
+            }
+        }
     }
 
     private Parent getContent() {
