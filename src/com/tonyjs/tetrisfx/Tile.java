@@ -14,8 +14,15 @@ public class Tile extends Rectangle {
         setHeight(TetrisFX.TILE_SIZE);
         relocate(x * TetrisFX.TILE_SIZE, y * TetrisFX.TILE_SIZE);
         setFill(Color.BLACK);
-        setStroke(Color.rgb(45, 45, 45));
         this.available = available;
+    }
+
+    public Tile(int x, int y) {
+        setWidth(TetrisFX.TILE_SIZE);
+        setHeight(TetrisFX.TILE_SIZE);
+        relocate(x * TetrisFX.TILE_SIZE, y * TetrisFX.TILE_SIZE);
+        setFill(Color.rgb(30, 30, 30));
+        setStroke(Color.rgb(45, 45, 45));
     }
 
     public boolean isAvailable() {

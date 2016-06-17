@@ -9,9 +9,12 @@ import javafx.scene.Scene;
 import javafx.scene.effect.Light;
 import javafx.scene.effect.Lighting;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -25,13 +28,14 @@ public class TetrisFX extends Application {
     public static final int TILE_SIZE = 32;
     public static final int WIDTH = 11;
     public static final int HEIGHT = 24;
+    public static final int APPWIDTH = 14;
+    public static final int SIDE_TILE_HEIGHT = 4;
+    public static final int SIDE_TILE_WIDTH = 4;
     public static boolean GAME_OVER = false;
     public static boolean ROTATED = false;
     public static boolean DROPPING = false;
     public static boolean SHIFTING = false;
-    private double time, shiftTime;
-    private Timeline timeline;
-
+    private double time;
     private AnimationTimer timer;
 
     private int tetrominoY = 0;
@@ -42,27 +46,33 @@ public class TetrisFX extends Application {
     public ArrayList<Tetromino.TetrominoDefinition> tetrominoSet;
     public ArrayList<Tetromino.TetrominoDefinition> playedSet;
     private Tetromino.TetrominoDefinition selected;
+    private Tetromino.TetrominoDefinition queuedBrick;
 
-    private static int[][] selectedMatrix;
+    private static int[][] selectedMatrix, queuedMatrix;
 
     public Tile[][] board = new Tile[HEIGHT][WIDTH];
+    public Tile[][] sideBar = new Tile[SIDE_TILE_HEIGHT][SIDE_TILE_WIDTH];
 
     private Group tileGroup = new Group();
+    private Group sideBarTiles = new Group();
 
     private Lighting lighting = new Lighting(new Light.Distant(225, 55, Color.WHITE));
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         Parent root = getContent();
+
         primaryStage.setTitle("TetrisFX");
-        primaryStage.setScene(new Scene(root, 10 * TILE_SIZE, HEIGHT * TILE_SIZE));
+        primaryStage.setScene(new Scene(root, APPWIDTH * TILE_SIZE, HEIGHT * TILE_SIZE));
         primaryStage.setResizable(false);
         primaryStage.show();
+
 
         originalSet = new Tetromino();
         tetrominoSet = originalSet.getSet();
         playedSet = new ArrayList<>();
 
+        setInitialBricks();
         spawnTetrominos();
 
         primaryStage.getScene().setOnKeyPressed(e -> {
@@ -124,6 +134,15 @@ public class TetrisFX extends Application {
         }
     }
 
+    private void clearSideBarTiles() {
+        for (int i = 0; i < SIDE_TILE_HEIGHT ; i++) {
+            for (int j = 0; j < SIDE_TILE_WIDTH; j++) {
+                sideBar[i][j].setFill(Color.rgb(30, 30, 30));
+                sideBar[i][j].setEffect(null);
+            }
+        }
+    }
+
     private void moveLeft() {
         clearMatrix();
         --tetrominoX;
@@ -162,10 +181,11 @@ public class TetrisFX extends Application {
     }
 
     private void spawnTetrominos() {
-        Random r = new Random();
-        selected = tetrominoSet.get(r.nextInt(tetrominoSet.size()));
-        playedSet.add(selected);
+//        playedSet.add(selected);
+        swapQueuedBrick();
         selectedMatrix = selected.getMatrix();
+        queuedMatrix = queuedBrick.getMatrix();
+        clearSideBarTiles();
 
         for (int i = 0; i < selectedMatrix.length; i++) {
             for (int j = 0; j < selectedMatrix[0].length; j++) {
@@ -173,6 +193,26 @@ public class TetrisFX extends Application {
                         board[i][j].setFill(selected.getColor());
                         board[i][j].setEffect(lighting);
                         board[i][j].setAvailable(false);
+                }
+            }
+        }
+
+
+        for (int i = 0; i < queuedMatrix.length; i++) {
+            for (int j = 0; j < queuedMatrix[0].length; j++) {
+                if (queuedMatrix[i][j] != 0) {
+                    if (queuedBrick.getColor() == Color.YELLOW ||
+                            queuedBrick.getColor() == Color.RED ||
+                            queuedBrick.getColor() == Color.ORANGERED) {
+                        sideBar[i + 1][j + 1].setFill(queuedBrick.getColor());
+                        sideBar[i + 1][j + 1].setEffect(lighting);
+                    } else if (queuedBrick.getColor() != Color.CYAN) {
+                        sideBar[i + 1][j].setFill(queuedBrick.getColor());
+                        sideBar[i + 1][j].setEffect(lighting);
+                    } else {
+                        sideBar[i][j].setFill(queuedBrick.getColor());
+                        sideBar[i][j].setEffect(lighting);
+                    }
                 }
             }
         }
@@ -191,6 +231,22 @@ public class TetrisFX extends Application {
             }
         };
         timer.start();
+    }
+
+    private void setInitialBricks() {
+        Random r = new Random();
+        selected = tetrominoSet.get(r.nextInt(tetrominoSet.size()));
+        queueNextBrick();
+    }
+
+    private void queueNextBrick() {
+        Random r = new Random();
+        queuedBrick = tetrominoSet.get(r.nextInt(tetrominoSet.size()));
+    }
+
+    private void swapQueuedBrick() {
+        selected = queuedBrick;
+        queueNextBrick();
     }
 
     private void moveDown() {
@@ -360,7 +416,9 @@ public class TetrisFX extends Application {
     }
 
     private Parent getContent() {
+        HBox rootWindow = new HBox();
         Pane root = new Pane();
+
         root.getChildren().add(tileGroup);
 
         for (int y = 0; y < HEIGHT; y++) {
@@ -370,7 +428,32 @@ public class TetrisFX extends Application {
                 tileGroup.getChildren().add(tile);
             }
         }
-        return root;
+
+        Parent sideBar = setSideBarContent();
+        rootWindow.getChildren().addAll(sideBar, root);
+        return rootWindow;
+    }
+
+    private Parent setSideBarContent() {
+        VBox sideBarStack = new VBox();
+
+        for (int y = 0; y < SIDE_TILE_HEIGHT; y++) {
+            for (int x = 0; x < SIDE_TILE_WIDTH; x++) {
+                Tile tile = new Tile(x, y);
+                sideBar[y][x] = tile;
+                sideBarTiles.getChildren().add(tile);
+            }
+        }
+
+        Pane sideBar = new Pane();
+        Rectangle rec = new Rectangle();
+        rec.setWidth(5 * TILE_SIZE);
+        rec.setHeight(HEIGHT * TILE_SIZE);
+        rec.setFill(Color.rgb(30, 30, 30));
+        sideBar.getChildren().add(rec);
+
+        sideBarStack.getChildren().addAll(sideBarTiles, sideBar);
+        return sideBarStack;
     }
 
     public static void main(String[] args) {

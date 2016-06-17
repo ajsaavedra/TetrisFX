@@ -71,24 +71,24 @@ public class Tetromino {
         L = new TetrominoDefinition(new int[][]{
                 {0, 0, 1},
                 {1, 1, 1}
-        }, Color.rgb(255, 94, 0));
+        }, Color.ORANGERED);
 
         rotatedL = new TetrominoDefinition(new int[][]{
                 {1, 0},
                 {1, 0},
                 {1, 1}
-        }, Color.rgb(255, 94, 0));
+        }, Color.ORANGERED);
 
         rotatedL2 = new TetrominoDefinition(new int[][]{
                 {1, 1, 1},
                 {1, 0, 0}
-        }, Color.rgb(255, 94, 0));
+        }, Color.ORANGERED);
 
         rotatedL3 = new TetrominoDefinition(new int[][]{
                 {1, 1},
                 {0, 1},
                 {0, 1}
-        }, Color.rgb(255, 94, 0));
+        }, Color.ORANGERED);
     }
 
     public void setOBlock() {
