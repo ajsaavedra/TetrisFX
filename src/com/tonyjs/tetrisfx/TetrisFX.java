@@ -2,7 +2,6 @@ package com.tonyjs.tetrisfx;
 
 import javafx.animation.*;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -12,6 +11,8 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
@@ -21,7 +22,6 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -67,6 +67,7 @@ public class TetrisFX extends Application {
 
     private Lighting lighting = new Lighting(new Light.Distant(225, 55, Color.WHITE));
     private Text playerLevel, pointsLabel;
+    private MediaPlayer mp;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -74,14 +75,19 @@ public class TetrisFX extends Application {
 
         primaryStage.setTitle("TetrisFX");
         Scene main = new Scene(root, APPWIDTH * TILE_SIZE, HEIGHT * TILE_SIZE);
-        primaryStage.setScene(main);
-        primaryStage.setResizable(false);
-        primaryStage.show();
 
-        URL url = this.getClass().getResource("/css/styles.css");
-        String css = url.toExternalForm();
-        main.getStylesheets().add(css);
-
+        String theme = getClass().getResource("/sounds/theme.mp3").toString();
+        Media media = new Media(theme);
+        mp = new MediaPlayer(media);
+        Runnable replaySong = new Runnable() {
+            @Override
+            public void run() {
+                mp.stop();
+                mp.play();
+            }
+        };
+        mp.setOnEndOfMedia(replaySong);
+        mp.play();
 
         originalSet = new Tetromino();
         tetrominoSet = originalSet.getSet();
@@ -89,6 +95,10 @@ public class TetrisFX extends Application {
 
         setInitialBricks();
         spawnTetrominos();
+
+        primaryStage.setScene(main);
+        primaryStage.setResizable(false);
+        primaryStage.show();
 
         primaryStage.getScene().setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.UP) {
@@ -117,7 +127,6 @@ public class TetrisFX extends Application {
             }
             SHIFTING = false;
         });
-
     }
 
     private void rotateBrick() {
@@ -202,7 +211,6 @@ public class TetrisFX extends Application {
         swapQueuedBrick();
         selectedMatrix = selected.getMatrix();
         clearSideBarTiles();
-
         for (int i = 0; i < selectedMatrix.length; i++) {
             for (int j = 0; j < selectedMatrix[0].length; j++) {
                 if (selectedMatrix[i][j] != 0) {
@@ -276,7 +284,7 @@ public class TetrisFX extends Application {
         if ((tetrominoY <= 1 && !moveIsLegal)) {
             GAME_OVER = true;
             timer.stop();
-            Platform.exit();
+            System.exit(0);
         } else if (tetrominoY >= (HEIGHT - selectedMatrix.length) || !moveIsLegal) {
             timer.stop();
             DROPPING = false; ROTATED = false;
@@ -310,7 +318,6 @@ public class TetrisFX extends Application {
 
     private void updatePlayerLevel() {
         playerLevel.setText("Level " + Integer.toString(playerLevelNum));
-        pointsLabel.setText("SCORE: " + Integer.toString(playerPoints));
     }
 
     private void updateTotalScore(int playerLevel, int rowsCleared) {
@@ -330,6 +337,7 @@ public class TetrisFX extends Application {
                 break;
         }
         playerPoints += y * (playerLevel + 1);
+        pointsLabel.setText("SCORE: " + Integer.toString(playerPoints));
     }
 
     private boolean moveIsLegal() {
@@ -460,7 +468,7 @@ public class TetrisFX extends Application {
             }
         }
         updateTotalScore(playerLevelNum, shiftDifferenceY);
-        timesRowWasDeleted++;
+        timesRowWasDeleted += shiftDifferenceY;
         if (timesRowWasDeleted == 10) {
             playerLevelNum++;
             updatePlayerLevel();
