@@ -374,7 +374,7 @@ public class TetrisFX extends Application {
         boolean legalMove = true;
         for (int i = tetrominoY; i < tetrominoY + selectedMatrix.length; i++) {
             for (int j = tetrominoX + selectedMatrix[0].length - 1; j < tetrominoX + selectedMatrix[0].length; j++) {
-                if (!board[i][j + 1].isAvailable()) {
+                if (!board[i][j + 1].isAvailable() && !board[i][j].isAvailable()) {
                     legalMove = false;
                 }
             }
@@ -386,7 +386,7 @@ public class TetrisFX extends Application {
         boolean legalMove = true;
         for (int i = tetrominoY; i < tetrominoY + selectedMatrix.length; i++) {
             for (int j = tetrominoX; j < tetrominoX + 1; j++) {
-                if (!board[i][j - 1].isAvailable()) {
+                if (!board[i][j - 1].isAvailable() && !board[i][j].isAvailable()) {
                     legalMove = false;
                 }
             }
