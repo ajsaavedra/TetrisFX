@@ -130,21 +130,34 @@ public class TetrisFX extends Application {
     }
 
     private void rotateBrick() {
-        clearMatrix();
-        int[][] rotatedMatrix = selected.rotate();
-        selectedMatrix = rotatedMatrix;
-        if (tetrominoX >= 8) {
-            if (selected.getColor() == Color.CYAN ) {
-                tetrominoX-=3;
-            } else if (selected.getColor() != Color.YELLOW) {
-                tetrominoX-=1;
-            }
+        boolean legal = false;
+
+        try {
+            legal = rotateIsLegal();
+        } catch (ArrayIndexOutOfBoundsException err) {
+            System.out.println(err.getStackTrace());
         }
-        for (int i = 0; i < rotatedMatrix.length; i++) {
-            for (int j = 0; j < rotatedMatrix[0].length; j++) {
-                board[tetrominoY + i][tetrominoX + j].setEffect(rotatedMatrix[i][j] == 0 ? null : lighting);
-                board[tetrominoY + i][tetrominoX + j].setFill(rotatedMatrix[i][j] == 0 ? Color.BLACK : selected.getColor());
-                board[tetrominoY + i][tetrominoX + j].setAvailable(rotatedMatrix[i][j] == 0);
+        
+        if (legal) {
+            clearMatrix();
+            int[][] rotatedMatrix = selected.rotate();
+            selectedMatrix = rotatedMatrix;
+            if (tetrominoX >= 8) {
+                if (selected.getColor() == Color.CYAN) {
+                    tetrominoX -= 3;
+                } else if (selected.getColor() != Color.YELLOW) {
+                    tetrominoX -= 1;
+                }
+            }
+            if (tetrominoY > 1) {
+                tetrominoY--;
+            }
+            for (int i = 0; i < rotatedMatrix.length; i++) {
+                for (int j = 0; j < rotatedMatrix[0].length; j++) {
+                    board[tetrominoY + i][tetrominoX + j].setEffect(rotatedMatrix[i][j] == 0 ? null : lighting);
+                    board[tetrominoY + i][tetrominoX + j].setFill(rotatedMatrix[i][j] == 0 ? Color.BLACK : selected.getColor());
+                    board[tetrominoY + i][tetrominoX + j].setAvailable(rotatedMatrix[i][j] == 0);
+                }
             }
         }
     }
@@ -394,6 +407,56 @@ public class TetrisFX extends Application {
         return legalMove;
     }
 
+    private boolean rotateIsLegal() {
+        boolean topLeft = true;
+        boolean topRight = true;
+        boolean bottomLeft = true;
+        boolean bottomRight = true;
+
+        for (int i = 0; i < selectedMatrix.length; i++) {
+            for (int j = 0; j < selectedMatrix[0].length; j++) {
+                if (i == 0) {
+                    if (j == 0) { // looking at the top left corner
+                        if (selectedMatrix[i][j] != 0 && tetrominoX > 0 && tetrominoY > 0) {
+                            if (!board[tetrominoY - 1][tetrominoX].isAvailable() ||
+                                    !board[tetrominoY - 1][tetrominoX - 1].isAvailable() ||
+                                    !board[tetrominoY][tetrominoX - 1].isAvailable()) {
+                                topLeft = false;
+                            }
+                        }
+                    } else if (j == selectedMatrix[0].length - 1) { // looking at the top right corner
+                        if (selectedMatrix[i][j] != 0 && tetrominoX < WIDTH - j - 1 && tetrominoY > 0) {
+                            if (!board[tetrominoY][tetrominoX + j + 1].isAvailable() ||
+                                    !board[tetrominoY - 1][tetrominoX + j + 1].isAvailable() ||
+                                    !board[tetrominoY - 1][tetrominoX + j].isAvailable()) {
+                                topRight = false;
+                            }
+                        }
+                    }
+                } else if (i == selectedMatrix.length - 1) {
+                    if (j == 0) { // looking at the bottom left corner
+                        if (selectedMatrix[i][j] != 0 && tetrominoX > 0 && tetrominoY < HEIGHT - j - 1) {
+                            if (!board[tetrominoY + i + 1][tetrominoX].isAvailable() ||
+                                    !board[tetrominoY + i + 1][tetrominoX - 1].isAvailable() ||
+                                    !board[tetrominoY + i][tetrominoX - 1].isAvailable()) {
+                                bottomLeft = false;
+                            }
+                        }
+                    } else if (j == selectedMatrix[0].length - 1) { // looking at the bottom right corner
+                        if (selectedMatrix[i][j] != 0 && tetrominoX < WIDTH - j - 1 && tetrominoY < HEIGHT - j - 1) {
+                            if (!board[tetrominoY + i + 1][tetrominoX + j +1].isAvailable() ||
+                                    !board[tetrominoY + i + 1][tetrominoX + j + 1].isAvailable() ||
+                                    !board[tetrominoY + i][tetrominoX + j + 1].isAvailable()) {
+                                bottomRight = false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return topLeft || topRight || bottomLeft || bottomRight;
+    }
+
     private void respawn() {
         tetrominoY = 0;
         tetrominoX = 0;
@@ -469,7 +532,7 @@ public class TetrisFX extends Application {
         }
         updateTotalScore(playerLevelNum, shiftDifferenceY);
         timesRowWasDeleted += shiftDifferenceY;
-        if (timesRowWasDeleted == 10) {
+        if (timesRowWasDeleted >= 10) {
             playerLevelNum++;
             updatePlayerLevel();
             timesRowWasDeleted = 0;
